@@ -20,6 +20,16 @@ else:
 
 LEARNING_RATE = 1e-2
 
+class Spinner:
+    SPINNER_CHARS='-\|/'
+    def __init__(self):
+        self.state = 0
+
+    def printSpinner(self):
+        print '\b\b' + self.SPINNER_CHARS[self.state],
+        sys.stdout.flush()
+        self.state = (self.state + 1) & 0x03
+
 class LunarLanderPolicy:
     def __init__(self, sess, obsSize, outputSize, numObs=3 ,hiddenLayerSize=32):
         self.sess = sess
@@ -98,7 +108,9 @@ def runEpisode(env, actionPicker):
     
     obs = env.reset()
     done = False
+    s = Spinner()
     while not done:
+        s.printSpinner()
         action, inputData = actionPicker(obs)
         trace['obs'].append(inputData)
         res = env.step(action)
@@ -112,6 +124,8 @@ def rollout(env, actionPicker, numEpisodes=10):
     episodes = []
     for i in range(numEpisodes):
         episodes.append(runEpisode(env, actionPicker))
+        print '\b\b.  ',
+        sys.stdout.flush()
 
     return episodes
 
@@ -148,7 +162,7 @@ if __name__ == '__main__':
     plt.show(block=False)
 
     for i in range(200):
-        print '\rrollout', i,
+        print 'rollout', i, '  ',
         sys.stdout.flush()
         # Forward Pass
         episodes = rollout(env, lunarPolicy.createActionPicker(), numEpisodes=20)
@@ -172,6 +186,8 @@ if __name__ == '__main__':
         avgRewardLine.set_xdata(range(len(avgRewardTrace)))
         lossLine.set_ydata(lossTrace)
         lossLine.set_xdata(range(len(lossTrace)))
+
+        print avgRewardTrace[-1], lossTrace[-1]
 
 
         ax1.relim()
